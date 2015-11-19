@@ -5,11 +5,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 /**
  * Created by ifta on 10/3/15.
@@ -165,5 +169,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //            cursor.moveToNext();
 //        }
         return cursor;
+    }
+    void pullDb()
+    {
+
+        try {
+            close();
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = DB_PATH+DB_NAME;
+                String backupDBPath = DB_NAME;
+                File currentDB = new File(data, currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                }
+            }
+        } catch (Exception e) {
+        }
+    }
+    public Cursor getSubjects()
+    {
+        String query = "Select * from subject";
+        return myDataBase.rawQuery(query,null);
+    }
+    public Cursor getChapters(int _id)
+    {
+        String query = "Select _id,name from chapter where subject_id = "+ _id;
+        return myDataBase.rawQuery(query,null);
     }
 }
